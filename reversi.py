@@ -10,9 +10,10 @@ class MyHandler(BaseHTTPRequestHandler):
         return self.rfile.read(content_len)
 
     def do_GET(self):
-        pass
+        print("Get")
 
     def do_POST(self):
+        print("Post")
         print(self.get_body())
 
 
