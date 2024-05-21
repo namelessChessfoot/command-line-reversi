@@ -1,3 +1,7 @@
+import warnings
+
+warnings.filterwarnings("ignore")
 import requests
 
-requests.post("http://10.91.128.150:5678/", data="册那，戆驴")
+a = requests.post("http://localhost:5678/", data="Hi")
+print(a.content)
