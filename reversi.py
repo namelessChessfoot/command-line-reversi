@@ -1,48 +1,21 @@
 import warnings
 
 warnings.filterwarnings("ignore")
-import requests
-
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from threading import Thread
+from network import Network
 import argparse
+import json
 
 
-class MyHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, server):
-        super().__init__(request, client_address, server)
-
-    def get_body(self):
-        content_len = int(self.headers.get("Content-Length"))
-        return self.rfile.read(content_len)
-
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Good")
-
-    def do_POST(self):
-        self.send_response(200)
-        self.end_headers()
-        print("Post")
-        print(self.get_body().decode())
-
-    def log_message(self, format, *args):
-        pass
-
-
-def start_server(port):
-    httpserver = HTTPServer(("", port), MyHandler)
-    httpserver.serve_forever()
+def handle_chat(req_body):
+    print(f"        From peer: {req_body['message']}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", type=int, default=5678)
     args = parser.parse_args()
-    st = Thread(target=start_server, args=[args.port])
-    st.start()
-    addr = input("Your peer's addr: ")
+    network = Network(args.port, [["CHAT", handle_chat]])
+    network.connect(input("who?"))
     while True:
-        content = input("Say something to them: ")
-        requests.post(f"http://{addr}", data=content)
+        msg = input()
+        network.send({"ACTION": "CHAT", "message": msg})
