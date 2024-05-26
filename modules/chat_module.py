@@ -2,8 +2,8 @@ from .base_module import BaseModule
 
 
 class ChatModule(BaseModule):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, network) -> None:
+        super().__init__(network)
         self.action = "CHAT"
 
     def make_request(self):

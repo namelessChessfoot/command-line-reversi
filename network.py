@@ -4,43 +4,35 @@ warnings.filterwarnings("ignore")
 import socket
 import requests
 import json
-from random import randint
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 
 
 class Network:
-    def __init__(self, port, callbacks=[]) -> None:
-        def handle_connect(req_body):
-            if self.secret == -1:
-                idea = input(
-                    f"Someone wants to connect and leaves the following message:\n[{req_body['message']}]\nType in [yes] to accept\n"
-                )
-                if idea == "yes":
-                    my_rand = randint(0, 10000)
-                    peer_rand = req_body["rand"]
-                    self.secret = my_rand + peer_rand
-                    self.peer = req_body["addr"]
-                    self.print_status()
-                    return my_rand
-            return -1
+    def __init__(self, port, module_constructors) -> None:
 
-        for i in range(len(callbacks)):
-            func = callbacks[i][1]
+        self.modules = []
+        callbacks = []
+        for cons in module_constructors:
+            mod = cons(self)
+            self.modules.append(mod)
+            func = mod.handle_request
+            if mod.auth_on():
 
-            def with_auth(req_body):
-                if (
-                    self.secret == -1
-                    or "secret" not in req_body
-                    or self.secret != req_body["secret"]
-                ):
-                    print("Auth failed")
-                    return -2
-                return func(req_body)
+                def with_auth(req_body):
+                    if (
+                        self.secret == -1
+                        or "secret" not in req_body
+                        or self.secret != req_body["secret"]
+                    ):
+                        print("Auth failed")
+                        return -2
+                    return func(req_body)
 
-            callbacks[i][1] = with_auth
-        callbacks.append(["CONNECT", handle_connect])
+                callbacks.append([mod.get_action(), with_auth])
+            else:
+                callbacks.append([mod.get_action(), func])
 
         class MyHandler(BaseHTTPRequestHandler):
             def __init__(self, request, client_address, server):
@@ -74,35 +66,14 @@ class Network:
         self.secret = -1
         self.print_status()
 
+    def get_modules(self):
+        return self.modules
+
     def print_status(self):
         print()
         print(f"Listening to {self.ipv4}:{self.port} with secret {self.secret}")
         print(f"Send to {self.peer} with secret {self.secret}")
         print()
-
-    def connect(self, peer, message="Hi, this is Keming Xu"):
-        if len(peer) > 0:
-            self.peer = peer
-            my_rand = randint(0, 10000)
-
-            def callback(content):
-                peer_rand = int(content)
-                if peer_rand == -1:
-                    print("Connection failed")
-                else:
-                    self.secret = my_rand + int(content)
-                    print("Connection succeeded")
-
-            self.send(
-                {
-                    "ACTION": "CONNECT",
-                    "rand": my_rand,
-                    "message": message,
-                    "addr": f"{self.ipv4}:{self.port}",
-                },
-                callback,
-            )
-        self.print_status()
 
     def send(self, data, callback=lambda rsp: 0):
         if self.peer == "Unknown":

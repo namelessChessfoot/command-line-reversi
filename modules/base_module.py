@@ -1,6 +1,7 @@
 class BaseModule:
-    def __init__(self) -> None:
+    def __init__(self, network) -> None:
         self.action = "base"
+        self.network = network
 
     def get_action(self):
         return self.action
@@ -13,3 +14,6 @@ class BaseModule:
 
     def make_request(self):
         raise NotImplementedError()
+
+    def auth_on(self):
+        return True
