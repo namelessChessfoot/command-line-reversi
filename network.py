@@ -54,7 +54,6 @@ class Network:
                 self.send_response(200)
                 self.end_headers()
                 req_body = json.loads(self.get_body().decode())
-                # print(req_body)
                 for action, func in callbacks:
                     if action == req_body["ACTION"]:
                         self.wfile.write(json.dumps(func(req_body)).encode())
@@ -88,8 +87,11 @@ class Network:
 
             def callback(content):
                 peer_rand = int(content)
-                if peer_rand != -1:
+                if peer_rand == -1:
+                    print("Connection failed")
+                else:
                     self.secret = my_rand + int(content)
+                    print("Connection succeeded")
 
             self.send(
                 {
@@ -102,7 +104,7 @@ class Network:
             )
         self.print_status()
 
-    def send(self, data: str, callback=lambda rsp: 0):
+    def send(self, data, callback=lambda rsp: 0):
         if self.peer == "Unknown":
             return
         try:
