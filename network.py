@@ -13,7 +13,7 @@ class Network:
     def __init__(self, port, module_constructors) -> None:
 
         self.modules = []
-        callbacks = []
+        callbacks = {}
         for cons in module_constructors:
             mod = cons(self)
             self.modules.append(mod)
@@ -30,9 +30,9 @@ class Network:
                         return -2
                     return func(req_body)
 
-                callbacks.append([mod.get_action(), with_auth])
+                callbacks[mod.get_action()] = with_auth
             else:
-                callbacks.append([mod.get_action(), func])
+                callbacks[mod.get_action()] = func
 
         class MyHandler(BaseHTTPRequestHandler):
             def __init__(self, request, client_address, server):
@@ -46,10 +46,10 @@ class Network:
                 self.send_response(200)
                 self.end_headers()
                 req_body = json.loads(self.get_body().decode())
-                for action, func in callbacks:
-                    if action == req_body["ACTION"]:
-                        self.wfile.write(json.dumps(func(req_body)).encode())
-                        return
+                action = req_body["ACTION"]
+                if action in callbacks:
+                    self.wfile.write(json.dumps(callbacks[action](req_body)).encode())
+                    return
                 self.wfile.write(b"Not supported")
 
             def log_message(self, format, *args):
