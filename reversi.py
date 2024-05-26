@@ -5,6 +5,7 @@ from network import Network
 import argparse
 from modules.chat_module import ChatModule
 from modules.connect_module import ConnectModule
+from modules.reversi_module import ReversiModule
 
 
 if __name__ == "__main__":
