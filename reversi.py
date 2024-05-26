@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", type=int, default=5678)
     args = parser.parse_args()
-    modules = [ConnectModule, ChatModule]
+    modules = [ConnectModule, ChatModule, ReversiModule]
     network = Network(args.port, modules)
 
     while True:

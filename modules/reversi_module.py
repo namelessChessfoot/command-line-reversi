@@ -1,22 +1,50 @@
-# from .base_module import BaseModule
-# import json
+from .base_module import BaseModule
+import json
 
 
-# class ReversiModule(BaseModule):
-#     def __init__(self, network) -> None:
-#         super().__init__(network)
-#         self.action = "CHAT"
+class ReversiModule(BaseModule):
+    INVALID = -1
+    NEW_GAME = 0
+    PUT = 1
 
-#     def make_request(self):
-#         msg = input("Say something to your peer: ")
-#         return {"message": msg}
+    def __init__(self, network) -> None:
+        super().__init__(network)
+        self.action = "REVERSI"
+        self.board = None
 
-#     def handle_request(self, req_body):
-#         print(f"        Your peer: {req_body['message']}")
-#         return
+    def make_request(self):
+        if self.board == None:
+            return {"event": "new_game"}
+        position = list(
+            map(int, input("Where you would like to put (like 2,3)? ").split(","))
+        )
+        print(position)
+        self.position_attempt = position
+        return {"event": "put", "position": position}
 
-#     def handle_response(self, content):
-#         pass
+    def handle_request(self, req_body):
+        event = req_body["event"]
+        if event == "new_game":
+            if self.board:
+                return self.INVALID
+            self.board = Board()
+            self.board.print()
+            return self.NEW_GAME
+        elif event == "put":
+            res = self.board.put(*req_body["position"])
+            self.board.print()
+            return self.PUT if res else self.INVALID
+        return self.INVALID
+
+    def handle_response(self, content):
+        status_code = int(content)
+        if status_code == self.NEW_GAME:
+            self.board = Board()
+        elif status_code == self.PUT:
+            self.board.put(*self.position_attempt)
+        else:
+            print("Something went WRONG!!")
+        self.board.print()
 
 
 class Board:
@@ -49,7 +77,7 @@ class Board:
             print(i, end=" ")
             for j in range(8):
                 if self.get_hint()[i][j]:
-                    print("O", end=" ")
+                    print("*", end=" ")
                 else:
                     print(self.DISPLAY[self.board[i][j]], end=" ")
             print()
@@ -95,8 +123,8 @@ class Board:
         return True
 
 
-b = Board()
-while True:
-    b.print()
-    param = map(int, input().split(","))
-    b.put(*param)
+# b = Board()
+# while True:
+#     b.print()
+#     param = map(int, input().split(","))
+#     b.put(*param)
