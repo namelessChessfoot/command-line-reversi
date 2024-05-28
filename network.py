@@ -20,7 +20,7 @@ class Network:
             func = mod.handle_request
             if mod.auth_on():
 
-                def with_auth(req_body):
+                def with_auth(req_body, func=func):
                     if (
                         self.secret == -1
                         or "secret" not in req_body
